@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://c22eschcpwpq"]
 
 [ext_resource type="PackedScene" uid="uid://factoryfloor" path="res://Scenes/Environment/FactoryFloor.tscn" id="1_floor"]
+[ext_resource type="Script" path="res://Scripts/Camera/FreeOrbitCamera.cs" id="2_camera"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dark"]
 content_margin_left = 8.0
@@ -35,6 +36,7 @@ unique_name_in_owner = true
 [node name="Environment" parent="ViewportContainer/SubViewport/WorldRoot" unique_id=975694746 instance=ExtResource("1_floor")]
 
 [node name="Camera3D" type="Camera3D" parent="ViewportContainer/SubViewport/WorldRoot" unique_id=1186303679]
+script = ExtResource("2_camera")
 transform = Transform3D(1, 0, 0, 0, 0.866, 0.5, 0, -0.5, 0.866, 5, 4, 8)
 fov = 50.0
 far = 200.0
