@@ -73,10 +73,10 @@ public static class BoxWallLoader
     {
         var boxMesh = new BoxMesh();
         var multiMesh = new MultiMesh();
+        multiMesh.TransformFormat = MultiMesh.TransformFormatEnum.Transform3D;
+        multiMesh.UseColors = true;
         multiMesh.Mesh = boxMesh;
         multiMesh.InstanceCount = boxes.Count;
-        multiMesh.UseColors = true;
-        multiMesh.TransformFormat = MultiMesh.TransformFormatEnum.Transform3D;
 
         var meshInstance = new MultiMeshInstance3D { Name = "BoxWall", Multimesh = multiMesh };
 

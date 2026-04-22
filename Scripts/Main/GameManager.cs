@@ -29,7 +29,7 @@ public partial class GameManager : Node
         var sceneRoot = GetTree().CurrentScene;
         if (sceneRoot != null)
         {
-            _worldRoot = sceneRoot.FindChild("WorldRoot", false, false) as Node3D;
+            _worldRoot = sceneRoot.FindChild("WorldRoot", true, false) as Node3D;
         }
 
         if (_worldRoot == null)
