@@ -35,7 +35,7 @@ public static class UrdfParser
     public static RobotData? Parse(string robotPath)
     {
         string urdfDir = $"{robotPath}/urdf/";
-        string urdfFile = FindFirstUrdf(urdfDir);
+        string? urdfFile = FindFirstUrdf(urdfDir);
         if (urdfFile == null)
         {
             Logger.Logger.Instance.Error("UrdfParser", $"No .urdf file found in {urdfDir}");
@@ -69,7 +69,7 @@ public static class UrdfParser
             };
 
             // Extract links
-            var linkNodes = robotNode.SelectNodes("link");
+            var linkNodes = robotNode.SelectNodes("link")!;
             var links = new System.Collections.Generic.List<LinkData>();
             foreach (XmlNode linkNode in linkNodes)
             {
@@ -81,7 +81,7 @@ public static class UrdfParser
             robotData.Links = links.ToArray();
 
             // Extract revolute joints only
-            var jointNodes = robotNode.SelectNodes("joint");
+            var jointNodes = robotNode.SelectNodes("joint")!;
             var joints = new System.Collections.Generic.List<JointData>();
             foreach (XmlNode jointNode in jointNodes)
             {
@@ -117,14 +117,18 @@ public static class UrdfParser
                 var limit = jointNode.SelectSingleNode("limit");
                 if (limit != null)
                 {
-                    float.TryParse(limit.Attributes?["lower"]?.Value,
+                    string? lowerStr = limit.Attributes?["lower"]?.Value;
+                    string? upperStr = limit.Attributes?["upper"]?.Value;
+                    if (float.TryParse(lowerStr,
                         System.Globalization.NumberStyles.Float,
                         System.Globalization.CultureInfo.InvariantCulture,
-                        out joint.Lower);
-                    float.TryParse(limit.Attributes?["upper"]?.Value,
+                        out float lower))
+                        joint.Lower = lower;
+                    if (float.TryParse(upperStr,
                         System.Globalization.NumberStyles.Float,
                         System.Globalization.CultureInfo.InvariantCulture,
-                        out joint.Upper);
+                        out float upper))
+                        joint.Upper = upper;
                 }
 
                 joints.Add(joint);

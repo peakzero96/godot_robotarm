@@ -70,10 +70,10 @@ public partial class AppConfig : Node
                 var net = network.AsGodotDictionary();
                 if (net != null)
                 {
-                    if (net.TryGetValue("listen_port", out var v)) ListenPort = (int)v.AsNumber();
-                    if (net.TryGetValue("max_connections", out v)) MaxConnections = (int)v.AsNumber();
-                    if (net.TryGetValue("heartbeat_interval_ms", out v)) HeartbeatIntervalMs = (int)v.AsNumber();
-                    if (net.TryGetValue("reconnect_timeout_ms", out v)) ReconnectTimeoutMs = (int)v.AsNumber();
+                    if (net.TryGetValue("listen_port", out var v)) ListenPort = (int)v.AsDouble();
+                    if (net.TryGetValue("max_connections", out v)) MaxConnections = (int)v.AsDouble();
+                    if (net.TryGetValue("heartbeat_interval_ms", out v)) HeartbeatIntervalMs = (int)v.AsDouble();
+                    if (net.TryGetValue("reconnect_timeout_ms", out v)) ReconnectTimeoutMs = (int)v.AsDouble();
                 }
             }
 
@@ -84,7 +84,7 @@ public partial class AppConfig : Node
                 if (rob != null)
                 {
                     if (rob.TryGetValue("default_path", out var v)) RobotPath = v.AsString();
-                    if (rob.TryGetValue("update_rate_hz", out v)) UpdateRateHz = (int)v.AsNumber();
+                    if (rob.TryGetValue("update_rate_hz", out v)) UpdateRateHz = (int)v.AsDouble();
                 }
             }
 
@@ -108,7 +108,7 @@ public partial class AppConfig : Node
                     if (log.TryGetValue("level", out var v)) LogLevelStr = v.AsString();
                     if (log.TryGetValue("file_enabled", out var v2)) FileLoggingEnabled = v2.AsBool();
                     if (log.TryGetValue("file_path", out var v3)) LogFilePath = v3.AsString();
-                    if (log.TryGetValue("ui_max_lines", out var v4)) UiMaxLines = (int)v4.AsNumber();
+                    if (log.TryGetValue("ui_max_lines", out var v4)) UiMaxLines = (int)v4.AsDouble();
                 }
             }
 
@@ -120,7 +120,7 @@ public partial class AppConfig : Node
                 {
                     if (bw.TryGetValue("default_color", out var v)) BoxDefaultColor = v.AsString();
                     if (bw.TryGetValue("grabbed_color", out var v2)) BoxGrabbedColor = v2.AsString();
-                    if (bw.TryGetValue("fade_out_duration_ms", out var v3)) FadeOutDurationMs = (int)v3.AsNumber();
+                    if (bw.TryGetValue("fade_out_duration_ms", out var v3)) FadeOutDurationMs = (int)v3.AsDouble();
                 }
             }
 

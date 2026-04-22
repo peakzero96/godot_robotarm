@@ -40,7 +40,7 @@ public static class BoxWallLoader
             float GetNum(Godot.Collections.Dictionary? dict, string key, float fallback)
             {
                 if (dict == null || !dict.TryGetValue(key, out var v)) return fallback;
-                return (float)v.AsNumber();
+                return (float)v.AsDouble();
             }
 
             var pos = boxData.TryGetValue("position", out var pv)
@@ -54,7 +54,7 @@ public static class BoxWallLoader
 
             boxes.Add(new BoxInstance
             {
-                Id = boxData.TryGetValue("id", out var idv) ? (int)idv.AsNumber() : i,
+                Id = boxData.TryGetValue("id", out var idv) ? (int)idv.AsDouble() : i,
                 Position = new Vector3(
                     GetNum(pos, "x", 0), GetNum(pos, "y", 0), GetNum(pos, "z", 0)),
                 RotationDeg = new Vector3(
