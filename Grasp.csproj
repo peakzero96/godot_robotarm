@@ -3,5 +3,6 @@
     <TargetFramework>net8.0</TargetFramework>
     <EnableGodotNET>true</EnableGodotNET>
     <Nullable>enable</Nullable>
+    <AssemblyName>机械臂抓取数字孪生</AssemblyName>
   </PropertyGroup>
 </Project>

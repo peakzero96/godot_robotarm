@@ -1,15 +1,15 @@
-[gd_scene load_steps=3 format=3 uid="uid://main_scene"]
+[gd_scene format=3 uid="uid://c22eschcpwpq"]
 
-[ext_resource type="PackedScene" uid="uid://factory_floor_scene" path="res://Scenes/Environment/FactoryFloor.tscn" id="1_floor"]
+[ext_resource type="PackedScene" uid="uid://factoryfloor" path="res://Scenes/Environment/FactoryFloor.tscn" id="1_floor"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dark"]
-bg_color = Color(0.12, 0.12, 0.14, 0.9)
 content_margin_left = 8.0
-content_margin_right = 8.0
 content_margin_top = 4.0
+content_margin_right = 8.0
 content_margin_bottom = 4.0
+bg_color = Color(0.12, 0.12, 0.14, 0.9)
 
-[node name="Main" type="Control"]
+[node name="Main" type="Control" unique_id=2040502911]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -17,138 +17,137 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="ViewportContainer" type="SubViewportContainer" parent="."]
+[node name="ViewportContainer" type="SubViewportContainer" parent="." unique_id=1259407255]
 layout_mode = 1
-anchors_preset = 0
+anchors_preset = -1
 anchor_right = 0.78
 anchor_bottom = 1.0
 stretch = true
 
-[node name="SubViewport" type="SubViewport" parent="ViewportContainer"]
-size = Vector2i(1498, 1080)
-render_target_update_mode = 3
+[node name="SubViewport" type="SubViewport" parent="ViewportContainer" unique_id=260141658]
+handle_input_locally = false
+size = Vector2i(1497, 1080)
+render_target_update_mode = 4
 
-[node name="WorldRoot" type="Node3D" parent="ViewportContainer/SubViewport"]
+[node name="WorldRoot" type="Node3D" parent="ViewportContainer/SubViewport" unique_id=1401639394]
 unique_name_in_owner = true
 
-[node name="Environment" parent="ViewportContainer/SubViewport/WorldRoot" instance=ExtResource("1_floor")]
+[node name="Environment" parent="ViewportContainer/SubViewport/WorldRoot" unique_id=975694746 instance=ExtResource("1_floor")]
 
-[node name="Camera3D" type="Camera3D" parent="ViewportContainer/SubViewport/WorldRoot"]
+[node name="Camera3D" type="Camera3D" parent="ViewportContainer/SubViewport/WorldRoot" unique_id=1186303679]
 transform = Transform3D(1, 0, 0, 0, 0.866, 0.5, 0, -0.5, 0.866, 5, 4, 8)
 fov = 50.0
-near = 0.05
 far = 200.0
 
-[node name="UIPanel" type="PanelContainer" parent="."]
+[node name="UIPanel" type="PanelContainer" parent="." unique_id=1607919335]
 layout_mode = 1
-anchors_preset = 0
+anchors_preset = -1
 anchor_left = 0.78
-anchor_top = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_dark")
 
-[node name="VBox" type="VBoxContainer" parent="UIPanel"]
+[node name="VBox" type="VBoxContainer" parent="UIPanel" unique_id=601432842]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="ConnectionPanel" type="Panel" parent="UIPanel/VBox"]
+[node name="ConnectionPanel" type="Panel" parent="UIPanel/VBox" unique_id=289098460]
 custom_minimum_size = Vector2(0, 60)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_dark")
 
-[node name="Label" type="Label" parent="UIPanel/VBox/ConnectionPanel"]
+[node name="Label" type="Label" parent="UIPanel/VBox/ConnectionPanel" unique_id=108953501]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -80
-offset_top = -10
-offset_right = 80
-offset_bottom = 10
+offset_left = -80.0
+offset_top = -10.0
+offset_right = 80.0
+offset_bottom = 10.0
 grow_horizontal = 2
 grow_vertical = 2
 text = "Connection Panel (Phase 6)"
 
-[node name="JointDisplayPanel" type="Panel" parent="UIPanel/VBox"]
+[node name="JointDisplayPanel" type="Panel" parent="UIPanel/VBox" unique_id=1399727657]
 custom_minimum_size = Vector2(0, 180)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_dark")
 
-[node name="Label" type="Label" parent="UIPanel/VBox/JointDisplayPanel"]
+[node name="Label" type="Label" parent="UIPanel/VBox/JointDisplayPanel" unique_id=1501577943]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -90
-offset_top = -10
-offset_right = 90
-offset_bottom = 10
+offset_left = -90.0
+offset_top = -10.0
+offset_right = 90.0
+offset_bottom = 10.0
 grow_horizontal = 2
 grow_vertical = 2
 text = "Joint Display Panel (Phase 6)"
 
-[node name="GraspProgressPanel" type="Panel" parent="UIPanel/VBox"]
+[node name="GraspProgressPanel" type="Panel" parent="UIPanel/VBox" unique_id=1200438724]
 custom_minimum_size = Vector2(0, 60)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_dark")
 
-[node name="Label" type="Label" parent="UIPanel/VBox/GraspProgressPanel"]
+[node name="Label" type="Label" parent="UIPanel/VBox/GraspProgressPanel" unique_id=1276580117]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -90
-offset_top = -10
-offset_right = 90
-offset_bottom = 10
+offset_left = -90.0
+offset_top = -10.0
+offset_right = 90.0
+offset_bottom = 10.0
 grow_horizontal = 2
 grow_vertical = 2
 text = "Grasp Progress Panel (Phase 6)"
 
-[node name="ControlPanel" type="Panel" parent="UIPanel/VBox"]
+[node name="ControlPanel" type="Panel" parent="UIPanel/VBox" unique_id=1849062014]
 custom_minimum_size = Vector2(0, 120)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_dark")
 
-[node name="Label" type="Label" parent="UIPanel/VBox/ControlPanel"]
+[node name="Label" type="Label" parent="UIPanel/VBox/ControlPanel" unique_id=1882518035]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -80
-offset_top = -10
-offset_right = 80
-offset_bottom = 10
+offset_left = -80.0
+offset_top = -10.0
+offset_right = 80.0
+offset_bottom = 10.0
 grow_horizontal = 2
 grow_vertical = 2
 text = "Control Panel (Phase 6)"
 
-[node name="EventLogPanel" type="Panel" parent="UIPanel/VBox"]
+[node name="EventLogPanel" type="Panel" parent="UIPanel/VBox" unique_id=1428777387]
 custom_minimum_size = Vector2(0, 300)
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_dark")
 
-[node name="Label" type="Label" parent="UIPanel/VBox/EventLogPanel"]
+[node name="Label" type="Label" parent="UIPanel/VBox/EventLogPanel" unique_id=1619547081]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -80
-offset_top = -10
-offset_right = 80
-offset_bottom = 10
+offset_left = -80.0
+offset_top = -10.0
+offset_right = 80.0
+offset_bottom = 10.0
 grow_horizontal = 2
 grow_vertical = 2
 text = "Event Log Panel (Phase 6)"
