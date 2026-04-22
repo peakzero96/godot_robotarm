@@ -1,0 +1,30 @@
+# Godot 4.x
+.godot/
+*.import
+export_presets.cfg
+
+# C#
+bin/
+obj/
+*.csproj.user
+
+# Logs
+Logs/
+
+# Legacy robot arm dir (moved to robot_arm/)
+abb_irb4600_60_205/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build
+*.exe
+*.pdb

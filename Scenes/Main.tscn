@@ -1,0 +1,155 @@
+[gd_scene load_steps=3 format=3 uid="uid://main_scene"]
+
+[ext_resource type="PackedScene" path="res://Scenes/Environment/FactoryFloor.tscn" uid="uid://factory_floor_scene"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dark"]
+bg_color = Color(0.12, 0.12, 0.14, 0.9)
+content_margin_left = 8.0
+content_margin_right = 8.0
+content_margin_top = 4.0
+content_margin_bottom = 4.0
+
+[node name="Main" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ViewportContainer" type="SubViewportContainer" parent="."]
+layout_mode = 1
+anchors_preset = 0
+anchor_right = 0.78
+anchor_bottom = 1.0
+stretch = true
+
+[node name="SubViewport" type="SubViewport" parent="ViewportContainer"]
+size = Vector2i(1498, 1080)
+render_target_update_mode = 3
+
+[node name="WorldRoot" type="Node3D" parent="ViewportContainer/SubViewport"]
+unique_name_in_owner = true
+
+[node name="Environment" parent="ViewportContainer/SubViewport/WorldRoot" instance=ExtResource("uid://factory_floor_scene")]
+
+[node name="Camera3D" type="Camera3D" parent="ViewportContainer/SubViewport/WorldRoot"]
+transform = Transform3D(1, 0, 0, 0, 0.866, 0.5, 0, -0.5, 0.866, 5, 4, 8)
+fov = 50.0
+near = 0.05
+far = 200.0
+
+[node name="UIPanel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 0
+anchor_left = 0.78
+anchor_top = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_dark")
+
+[node name="VBox" type="VBoxContainer" parent="UIPanel"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ConnectionPanel" type="Panel" parent="UIPanel/VBox"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_dark")
+
+[node name="Label" type="Label" parent="UIPanel/VBox/ConnectionPanel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -80
+offset_top = -10
+offset_right = 80
+offset_bottom = 10
+grow_horizontal = 2
+grow_vertical = 2
+text = "Connection Panel (Phase 6)"
+label_settings = null
+
+[node name="JointDisplayPanel" type="Panel" parent="UIPanel/VBox"]
+custom_minimum_size = Vector2(0, 180)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_dark")
+
+[node name="Label" type="Label" parent="UIPanel/VBox/JointDisplayPanel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -90
+offset_top = -10
+offset_right = 90
+offset_bottom = 10
+grow_horizontal = 2
+grow_vertical = 2
+text = "Joint Display Panel (Phase 6)"
+
+[node name="GraspProgressPanel" type="Panel" parent="UIPanel/VBox"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_dark")
+
+[node name="Label" type="Label" parent="UIPanel/VBox/GraspProgressPanel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -90
+offset_top = -10
+offset_right = 90
+offset_bottom = 10
+grow_horizontal = 2
+grow_vertical = 2
+text = "Grasp Progress Panel (Phase 6)"
+
+[node name="ControlPanel" type="Panel" parent="UIPanel/VBox"]
+custom_minimum_size = Vector2(0, 120)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_dark")
+
+[node name="Label" type="Label" parent="UIPanel/VBox/ControlPanel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -80
+offset_top = -10
+offset_right = 80
+offset_bottom = 10
+grow_horizontal = 2
+grow_vertical = 2
+text = "Control Panel (Phase 6)"
+
+[node name="EventLogPanel" type="Panel" parent="UIPanel/VBox"]
+custom_minimum_size = Vector2(0, 300)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_dark")
+
+[node name="Label" type="Label" parent="UIPanel/VBox/EventLogPanel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -80
+offset_top = -10
+offset_right = 80
+offset_bottom = 10
+grow_horizontal = 2
+grow_vertical = 2
+text = "Event Log Panel (Phase 6)"

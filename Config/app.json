@@ -1,0 +1,28 @@
+{
+  "version": "1.0",
+  "network": {
+    "listen_port": 5005,
+    "max_connections": 1,
+    "heartbeat_interval_ms": 1000,
+    "reconnect_timeout_ms": 5000
+  },
+  "robot": {
+    "default_path": "robot_arm/abb_irb4600_60_205",
+    "update_rate_hz": 60
+  },
+  "scene": {
+    "default_camera": "free_orbit",
+    "environment": "Scenes/Environment/FactoryFloor.tscn"
+  },
+  "logging": {
+    "level": "INFO",
+    "file_enabled": true,
+    "file_path": "Logs/grasp_{date}.log",
+    "ui_max_lines": 500
+  },
+  "box_wall": {
+    "default_color": "#C4A882",
+    "grabbed_color": "#4CAF50",
+    "fade_out_duration_ms": 2000
+  }
+}
