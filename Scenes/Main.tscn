@@ -3,6 +3,7 @@
 [ext_resource type="PackedScene" uid="uid://factoryfloor" path="res://Scenes/Environment/FactoryFloor.tscn" id="1_floor"]
 [ext_resource type="Script" uid="uid://cky2al36v8e2y" path="res://Scripts/Camera/FreeOrbitCamera.cs" id="2_camera"]
 [ext_resource type="Script" uid="uid://cqnfcswjmpjvj" path="res://Scripts/Utils/WorldAxes.cs" id="3_axes"]
+[ext_resource type="Script" uid="uid://bpmbxp7afne0v" path="res://Scripts/UI/JointDisplayPanel.cs" id="5_joints"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dark"]
 content_margin_left = 8.0
@@ -19,54 +20,54 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="ViewportContainer" type="SubViewportContainer" parent="." unique_id=1259407255]
+[node name="HSplit" type="HSplitContainer" parent="." unique_id=507854809]
 layout_mode = 1
-anchors_preset = -1
-anchor_right = 0.78
+anchors_preset = 15
+anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 2.0
-offset_top = 3.0
-offset_right = 2.0
-offset_bottom = 3.0
+grow_horizontal = 2
+grow_vertical = 2
+split_offsets = PackedInt32Array(-220)
+split_offset = -220
+
+[node name="ViewportContainer" type="SubViewportContainer" parent="HSplit" unique_id=1259407255]
+custom_minimum_size = Vector2(800, 0)
+layout_mode = 2
 stretch = true
 
-[node name="SubViewport" type="SubViewport" parent="ViewportContainer" unique_id=260141658]
+[node name="SubViewport" type="SubViewport" parent="HSplit/ViewportContainer" unique_id=260141658]
 handle_input_locally = false
-size = Vector2i(998, 720)
+size = Vector2i(800, 744)
 render_target_update_mode = 4
 
-[node name="WorldRoot" type="Node3D" parent="ViewportContainer/SubViewport" unique_id=1401639394]
+[node name="WorldRoot" type="Node3D" parent="HSplit/ViewportContainer/SubViewport" unique_id=1401639394]
 unique_name_in_owner = true
 
-[node name="Environment" parent="ViewportContainer/SubViewport/WorldRoot" unique_id=975694746 instance=ExtResource("1_floor")]
+[node name="Environment" parent="HSplit/ViewportContainer/SubViewport/WorldRoot" unique_id=975694746 instance=ExtResource("1_floor")]
 
-[node name="WorldAxes" type="Node3D" parent="ViewportContainer/SubViewport/WorldRoot" unique_id=1389934034]
+[node name="WorldAxes" type="Node3D" parent="HSplit/ViewportContainer/SubViewport/WorldRoot" unique_id=1389934034]
 script = ExtResource("3_axes")
 
-[node name="Camera3D" type="Camera3D" parent="ViewportContainer/SubViewport/WorldRoot" unique_id=1186303679]
-transform = Transform3D(0.93901026, -0.17194837, 0.29781455, -0.03186087, 0.8187943, 0.5732025, -0.34241006, -0.5477316, 0.7633777, 3.5919518, 6.2486763, 5.234317)
+[node name="Camera3D" type="Camera3D" parent="HSplit/ViewportContainer/SubViewport/WorldRoot" unique_id=1186303679]
+transform = Transform3D(0.33868864, -0.29802194, 0.8924534, -1.3845229e-08, 0.9485118, 0.31674188, -0.94089854, -0.10727688, 0.32125017, 4.659997, 2.604464, 3.0000458)
 fov = 50.0
 far = 200.0
 script = ExtResource("2_camera")
 
-[node name="UIPanel" type="PanelContainer" parent="." unique_id=1607919335]
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.78
-anchor_right = 1.0
-anchor_bottom = 1.0
+[node name="UIPanel" type="PanelContainer" parent="HSplit" unique_id=1607919335]
+layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_dark")
 
-[node name="VBox" type="VBoxContainer" parent="UIPanel" unique_id=601432842]
+[node name="VBox" type="VBoxContainer" parent="HSplit/UIPanel" unique_id=601432842]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="ConnectionPanel" type="Panel" parent="UIPanel/VBox" unique_id=289098460]
+[node name="ConnectionPanel" type="Panel" parent="HSplit/UIPanel/VBox" unique_id=289098460]
 custom_minimum_size = Vector2(0, 60)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_dark")
 
-[node name="Label" type="Label" parent="UIPanel/VBox/ConnectionPanel" unique_id=108953501]
+[node name="Label" type="Label" parent="HSplit/UIPanel/VBox/ConnectionPanel" unique_id=108953501]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -81,32 +82,29 @@ grow_horizontal = 2
 grow_vertical = 2
 text = "Connection Panel (Phase 6)"
 
-[node name="JointDisplayPanel" type="Panel" parent="UIPanel/VBox" unique_id=1399727657]
+[node name="JointDisplayPanel" type="PanelContainer" parent="HSplit/UIPanel/VBox" unique_id=1399727657]
 custom_minimum_size = Vector2(0, 180)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_dark")
+script = ExtResource("5_joints")
 
-[node name="Label" type="Label" parent="UIPanel/VBox/JointDisplayPanel" unique_id=1501577943]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -90.0
-offset_top = -10.0
-offset_right = 90.0
-offset_bottom = 10.0
-grow_horizontal = 2
-grow_vertical = 2
-text = "Joint Display Panel (Phase 6)"
+[node name="VBox" type="VBoxContainer" parent="HSplit/UIPanel/VBox/JointDisplayPanel" unique_id=524359699]
+layout_mode = 2
 
-[node name="GraspProgressPanel" type="Panel" parent="UIPanel/VBox" unique_id=1200438724]
+[node name="Title" type="Label" parent="HSplit/UIPanel/VBox/JointDisplayPanel/VBox" unique_id=1501577943]
+layout_mode = 2
+text = "Joints"
+
+[node name="JointList" type="VBoxContainer" parent="HSplit/UIPanel/VBox/JointDisplayPanel/VBox" unique_id=1463421073]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="GraspProgressPanel" type="Panel" parent="HSplit/UIPanel/VBox" unique_id=1200438724]
 custom_minimum_size = Vector2(0, 60)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_dark")
 
-[node name="Label" type="Label" parent="UIPanel/VBox/GraspProgressPanel" unique_id=1276580117]
+[node name="Label" type="Label" parent="HSplit/UIPanel/VBox/GraspProgressPanel" unique_id=1276580117]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -121,12 +119,12 @@ grow_horizontal = 2
 grow_vertical = 2
 text = "Grasp Progress Panel (Phase 6)"
 
-[node name="ControlPanel" type="Panel" parent="UIPanel/VBox" unique_id=1849062014]
+[node name="ControlPanel" type="Panel" parent="HSplit/UIPanel/VBox" unique_id=1849062014]
 custom_minimum_size = Vector2(0, 120)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_dark")
 
-[node name="Label" type="Label" parent="UIPanel/VBox/ControlPanel" unique_id=1882518035]
+[node name="Label" type="Label" parent="HSplit/UIPanel/VBox/ControlPanel" unique_id=1882518035]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -141,13 +139,13 @@ grow_horizontal = 2
 grow_vertical = 2
 text = "Control Panel (Phase 6)"
 
-[node name="EventLogPanel" type="Panel" parent="UIPanel/VBox" unique_id=1428777387]
+[node name="EventLogPanel" type="Panel" parent="HSplit/UIPanel/VBox" unique_id=1428777387]
 custom_minimum_size = Vector2(0, 300)
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_dark")
 
-[node name="Label" type="Label" parent="UIPanel/VBox/EventLogPanel" unique_id=1619547081]
+[node name="Label" type="Label" parent="HSplit/UIPanel/VBox/EventLogPanel" unique_id=1619547081]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
