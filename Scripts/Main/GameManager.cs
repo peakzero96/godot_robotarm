@@ -53,13 +53,16 @@ public partial class GameManager : Node
 
     private void LoadTestBoxWall()
     {
-        // Generate a small test wall (3x2x2 = 12 boxes)
+        float baseX = 0f;
+        float baseY = 0.3f;
+        float baseZ = 0f;
+        float boxW = 0.25f;
+        float boxH = 0.6f;
+        float boxD = 0.4f;
+        float gap = 0.01f;
+
         var boxes = new System.Collections.Generic.List<object>();
         int id = 0;
-        float boxW = 0.3f;
-        float boxH = 0.2f;
-        float boxD = 0.6f;
-        float gap = 0.01f;
 
         for (int layer = 0; layer < 3; layer++)
         {
@@ -70,7 +73,12 @@ public partial class GameManager : Node
                     boxes.Add(new
                     {
                         id = id++,
-                        position = new { x = col * (boxW + gap), y = layer * (boxH + gap), z = row * (boxD + gap) },
+                        position = new
+                        {
+                            x = baseX + col * (boxW + gap),
+                            y = baseY + layer * (boxH + gap),
+                            z = baseZ + row * (boxD + gap)
+                        },
                         rotation_deg = new { x = 0.0, y = 0.0, z = 0.0 },
                         size = new { x = boxW, y = boxH, z = boxD },
                         color = "#C4A882"

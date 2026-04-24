@@ -1,7 +1,8 @@
 [gd_scene format=3 uid="uid://c22eschcpwpq"]
 
 [ext_resource type="PackedScene" uid="uid://factoryfloor" path="res://Scenes/Environment/FactoryFloor.tscn" id="1_floor"]
-[ext_resource type="Script" path="res://Scripts/Camera/FreeOrbitCamera.cs" id="2_camera"]
+[ext_resource type="Script" uid="uid://cky2al36v8e2y" path="res://Scripts/Camera/FreeOrbitCamera.cs" id="2_camera"]
+[ext_resource type="Script" uid="uid://cqnfcswjmpjvj" path="res://Scripts/Utils/WorldAxes.cs" id="3_axes"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dark"]
 content_margin_left = 8.0
@@ -23,11 +24,15 @@ layout_mode = 1
 anchors_preset = -1
 anchor_right = 0.78
 anchor_bottom = 1.0
+offset_left = 2.0
+offset_top = 3.0
+offset_right = 2.0
+offset_bottom = 3.0
 stretch = true
 
 [node name="SubViewport" type="SubViewport" parent="ViewportContainer" unique_id=260141658]
 handle_input_locally = false
-size = Vector2i(1497, 1080)
+size = Vector2i(998, 720)
 render_target_update_mode = 4
 
 [node name="WorldRoot" type="Node3D" parent="ViewportContainer/SubViewport" unique_id=1401639394]
@@ -35,11 +40,14 @@ unique_name_in_owner = true
 
 [node name="Environment" parent="ViewportContainer/SubViewport/WorldRoot" unique_id=975694746 instance=ExtResource("1_floor")]
 
+[node name="WorldAxes" type="Node3D" parent="ViewportContainer/SubViewport/WorldRoot" unique_id=1389934034]
+script = ExtResource("3_axes")
+
 [node name="Camera3D" type="Camera3D" parent="ViewportContainer/SubViewport/WorldRoot" unique_id=1186303679]
-script = ExtResource("2_camera")
-transform = Transform3D(1, 0, 0, 0, 0.866, 0.5, 0, -0.5, 0.866, 5, 4, 8)
+transform = Transform3D(0.93901026, -0.17194837, 0.29781455, -0.03186087, 0.8187943, 0.5732025, -0.34241006, -0.5477316, 0.7633777, 3.5919518, 6.2486763, 5.234317)
 fov = 50.0
 far = 200.0
+script = ExtResource("2_camera")
 
 [node name="UIPanel" type="PanelContainer" parent="." unique_id=1607919335]
 layout_mode = 1

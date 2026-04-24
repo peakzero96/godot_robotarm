@@ -83,7 +83,6 @@ public static class BoxWallLoader
         for (int i = 0; i < boxes.Count; i++)
         {
             var box = boxes[i];
-            // Scale → Rotate → Translate (left-multiply in Godot = apply last to first)
             var basis = Basis.Identity
                 .Scaled(box.Size)
                 .Rotated(Vector3.Up, Mathf.DegToRad(box.RotationDeg.Y))
