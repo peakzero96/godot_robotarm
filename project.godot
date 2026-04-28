@@ -22,6 +22,8 @@ AppConfig="*res://Scripts/Main/AppConfig.cs"
 GameManager="*res://Scripts/Main/GameManager.cs"
 RobotController="*res://Scripts/Robot/RobotController.cs"
 BoxWallManager="*res://Scripts/BoxWall/BoxWallManager.cs"
+JointSequencePlayer="*res://Scripts/Grasp/JointSequencePlayer.cs"
+BoxAttachController="*res://Scripts/Grasp/BoxAttachController.cs"
 
 [display]
 

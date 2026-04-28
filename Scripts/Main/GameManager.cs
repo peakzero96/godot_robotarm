@@ -2,6 +2,7 @@ using Godot;
 using Grasp.Logger;
 using Grasp.Robot;
 using Grasp.BoxWall;
+using Grasp.Workflow;
 using System.Text.Json;
 
 namespace Grasp.Main;
@@ -41,12 +42,17 @@ public partial class GameManager : Node
         // Set world root for managers
         RobotController.Instance.SetWorldRoot(_worldRoot);
         BoxWallManager.Instance.SetWorldRoot(_worldRoot);
+        BoxAttachController.Instance.SetWorldRoot(_worldRoot);
 
         // Load robot
         RobotController.Instance.LoadRobot();
 
         // Load test box wall
         LoadTestBoxWall();
+
+        // Create grab workflow controller
+        var workflow = new GrabWorkflowController();
+        _worldRoot.AddChild(workflow);
 
         Logger.Logger.Instance.Info("GameManager", "Initialization complete");
     }
