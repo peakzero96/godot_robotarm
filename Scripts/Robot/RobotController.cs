@@ -60,8 +60,8 @@ public partial class RobotController : Node
         if (_worldRoot != null)
         {
             _worldRoot.AddChild(_robotRoot);
-            _robotRoot.Position = new Vector3(0.5f, 0, 2.5f);
-            _robotRoot.Rotation = new Vector3(-1.57f, 1.57f, 0);
+            _robotRoot.Position = new Vector3(0, 0, 0);
+            _robotRoot.Rotation = new Vector3(-1.57f, 0, 0);
         }
 
         EmitSignal(SignalName.RobotChanged, _robotName, _joints.Length);

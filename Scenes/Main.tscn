@@ -49,7 +49,7 @@ unique_name_in_owner = true
 script = ExtResource("3_axes")
 
 [node name="Camera3D" type="Camera3D" parent="HSplit/ViewportContainer/SubViewport/WorldRoot" unique_id=1186303679]
-transform = Transform3D(0.33868864, -0.29802194, 0.8924534, -1.3845229e-08, 0.9485118, 0.31674188, -0.94089854, -0.10727688, 0.32125017, 4.659997, 2.604464, 3.0000458)
+transform = Transform3D(0.9265483, 0.022964988, -0.37547418, 6.7261413e-10, 0.99813485, 0.06104855, 0.37617582, -0.05656443, 0.9248201, -1.2230492, 0.62472177, 3.521562)
 fov = 50.0
 far = 200.0
 script = ExtResource("2_camera")
@@ -94,6 +94,7 @@ layout_mode = 2
 [node name="Title" type="Label" parent="HSplit/UIPanel/VBox/JointDisplayPanel/VBox" unique_id=1501577943]
 layout_mode = 2
 text = "Joints"
+horizontal_alignment = 1
 
 [node name="JointList" type="VBoxContainer" parent="HSplit/UIPanel/VBox/JointDisplayPanel/VBox" unique_id=1463421073]
 layout_mode = 2

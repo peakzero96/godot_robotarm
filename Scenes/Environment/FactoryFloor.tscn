@@ -10,10 +10,11 @@ size = Vector2(50, 50)
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1045282766]
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1913294447]
-transform = Transform3D(0.866, -0.25, 0.433, 0, 0.866, 0.5, -0.5, -0.433, 0.75, 8, 12, 6)
+transform = Transform3D(0.8660254, 0.24999999, -0.43301266, 0, 0.8660253, 0.49999997, 0.5, -0.43301266, 0.74999994, -10.53056, 12, 6)
 shadow_enabled = true
 directional_shadow_max_distance = 30.0
 
 [node name="Floor" type="MeshInstance3D" parent="." unique_id=965006847]
+visible = false
 mesh = SubResource("PlaneMesh_floor")
 surface_material_override/0 = ExtResource("1_floor")

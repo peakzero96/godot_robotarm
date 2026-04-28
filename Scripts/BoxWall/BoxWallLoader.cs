@@ -97,6 +97,55 @@ public static class BoxWallLoader
         Logger.Logger.Instance.Info("BoxWallLoader",
             $"Created MultiMesh with {boxes.Count} boxes");
 
+        // Wireframe edge overlay using ImmediateMesh (12 edges per box)
+        var wireMesh = new ImmediateMesh();
+        wireMesh.SurfaceBegin(Mesh.PrimitiveType.Lines, null);
+
+        for (int i = 0; i < boxes.Count; i++)
+        {
+            var t = multiMesh.GetInstanceTransform(i);
+            var s = new Vector3(1, 1, 1); // box is unit cube scaled by basis
+            // 8 corners of unit cube
+            Vector3[] corners =
+            {
+                new(-0.5f, -0.5f, -0.5f), new(0.5f, -0.5f, -0.5f),
+                new(0.5f, 0.5f, -0.5f), new(-0.5f, 0.5f, -0.5f),
+                new(-0.5f, -0.5f, 0.5f), new(0.5f, -0.5f, 0.5f),
+                new(0.5f, 0.5f, 0.5f), new(-0.5f, 0.5f, 0.5f),
+            };
+            // Transform corners by the instance transform
+            for (int c = 0; c < 8; c++)
+                corners[c] = t * corners[c];
+
+            int[][] edges =
+            {
+                new[] { 0, 1 }, new[] { 1, 2 }, new[] { 2, 3 }, new[] { 3, 0 }, // back face
+                new[] { 4, 5 }, new[] { 5, 6 }, new[] { 6, 7 }, new[] { 7, 4 }, // front face
+                new[] { 0, 4 }, new[] { 1, 5 }, new[] { 2, 6 }, new[] { 3, 7 }, // connecting
+            };
+            foreach (var edge in edges)
+            {
+                wireMesh.SurfaceAddVertex(corners[edge[0]]);
+                wireMesh.SurfaceAddVertex(corners[edge[1]]);
+            }
+        }
+        wireMesh.SurfaceEnd();
+
+        var wireMat = new StandardMaterial3D
+        {
+            ShadingMode = StandardMaterial3D.ShadingModeEnum.Unshaded,
+            AlbedoColor = new Color(0.3f, 0.3f, 0.3f),
+            VertexColorUseAsAlbedo = false
+        };
+
+        var wireInstance = new MeshInstance3D
+        {
+            Name = "BoxWallWireframe",
+            Mesh = wireMesh,
+            MaterialOverride = wireMat
+        };
+        meshInstance.AddChild(wireInstance);
+
         return new BoxWallLoadResult
         {
             MeshInstance = meshInstance,
