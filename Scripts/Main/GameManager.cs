@@ -66,6 +66,10 @@ public partial class GameManager : Node
         LoadBoxWallFromFile("res://dataset/box_position.txt");
     }
 
+
+    //<summary>
+    /// Load box wall from a file
+    /// </summary>
     private void LoadBoxWallFromFile(string filePath)
     {
         using var file = FileAccess.Open(filePath, FileAccess.ModeFlags.Read);
@@ -121,6 +125,7 @@ public partial class GameManager : Node
                     y = Mathf.RadToDeg(euler.Y),
                     z = Mathf.RadToDeg(euler.Z)
                 },
+                rotation_quat = new { x = quat.X, y = quat.Y, z = quat.Z, w = quat.W },
                 size = new { x = width, y = height, z = depth },
                 color = "#C4A882"
             });

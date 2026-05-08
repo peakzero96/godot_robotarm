@@ -15,6 +15,7 @@ public class BoxInstance
     public int Id { get; set; }
     public Vector3 Position { get; set; }
     public Vector3 RotationDeg { get; set; }
+    public Quaternion RotationQuat { get; set; }
     public Vector3 Size { get; set; }
     public Color Color { get; set; }
     public BoxState State { get; set; } = BoxState.Waiting;

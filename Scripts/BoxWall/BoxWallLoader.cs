@@ -7,6 +7,7 @@ namespace Grasp.BoxWall;
 public class BoxWallLoadResult
 {
     public MultiMeshInstance3D MeshInstance { get; set; } = null!;
+    public Node3D? AxesContainer { get; set; }
     public BoxInstance[] Boxes { get; set; } = System.Array.Empty<BoxInstance>();
     public int TotalCount { get; set; }
 }
@@ -47,10 +48,20 @@ public static class BoxWallLoader
                 ? pv.AsGodotDictionary() : null;
             var rot = boxData.TryGetValue("rotation_deg", out var rv)
                 ? rv.AsGodotDictionary() : null;
+            var quatData = boxData.TryGetValue("rotation_quat", out var qv)
+                ? qv.AsGodotDictionary() : null;
             var size = boxData.TryGetValue("size", out var sv)
                 ? sv.AsGodotDictionary() : null;
             string colorStr = boxData.TryGetValue("color", out var cv)
                 ? cv.AsString() : defaultColor;
+
+            Quaternion rotationQuat = Quaternion.Identity;
+            if (quatData != null)
+            {
+                rotationQuat = new Quaternion(
+                    GetNum(quatData, "x", 0), GetNum(quatData, "y", 0),
+                    GetNum(quatData, "z", 0), GetNum(quatData, "w", 1)).Normalized();
+            }
 
             boxes.Add(new BoxInstance
             {
@@ -59,6 +70,7 @@ public static class BoxWallLoader
                     GetNum(pos, "x", 0), GetNum(pos, "y", 0), GetNum(pos, "z", 0)),
                 RotationDeg = new Vector3(
                     GetNum(rot, "x", 0), GetNum(rot, "y", 0), GetNum(rot, "z", 0)),
+                RotationQuat = rotationQuat,
                 Size = new Vector3(
                     GetNum(size, "x", 0.3f), GetNum(size, "y", 0.2f), GetNum(size, "z", 0.6f)),
                 Color = ParseColor(colorStr),
@@ -146,9 +158,63 @@ public static class BoxWallLoader
         };
         meshInstance.AddChild(wireInstance);
 
+        // [DEBUG] 每个箱子本地坐标系可视化 — 调试完毕后删除此段 + BoxWallManager 中 B 键切换逻辑
+        float axisLen = 0.5f;
+        var axesMesh = new ImmediateMesh();
+        axesMesh.SurfaceBegin(Mesh.PrimitiveType.Lines);
+
+        for (int i = 0; i < boxes.Count; i++)
+        {
+            var t = multiMesh.GetInstanceTransform(i);
+            Vector3 o = t.Origin;
+            // Basis contains box scale, normalize to get pure direction
+            Vector3 bx = t.Basis.X.Normalized();
+            Vector3 by = t.Basis.Y.Normalized();
+            Vector3 bz = t.Basis.Z.Normalized();
+
+            Vector3 euler = t.Basis.GetEuler();
+            Logger.Logger.Instance.Info("BoxWallLoader",
+                $"Box {i} origin: {o}, euler(deg)=({Mathf.RadToDeg(euler.X):F1}, {Mathf.RadToDeg(euler.Y):F1}, {Mathf.RadToDeg(euler.Z):F1}), basis: X={bx}, Y={by}, Z={bz}");
+
+            
+
+
+            // X axis - Red
+            axesMesh.SurfaceSetColor(new Color(1, 0.2f, 0.2f));
+            axesMesh.SurfaceAddVertex(o);
+            axesMesh.SurfaceAddVertex(o + bx * axisLen);
+            // Y axis - Green
+            axesMesh.SurfaceSetColor(new Color(0.2f, 1, 0.2f));
+            axesMesh.SurfaceAddVertex(o);
+            axesMesh.SurfaceAddVertex(o + by * axisLen);
+            // Z axis - Blue
+            axesMesh.SurfaceSetColor(new Color(0.2f, 0.2f, 1));
+            axesMesh.SurfaceAddVertex(o);
+            axesMesh.SurfaceAddVertex(o + bz * axisLen);
+        }
+
+        axesMesh.SurfaceEnd();
+
+        var axesMat = new StandardMaterial3D
+        {
+            AlbedoColor = Colors.White,
+            ShadingMode = StandardMaterial3D.ShadingModeEnum.Unshaded,
+            VertexColorUseAsAlbedo = true,
+            BillboardMode = BaseMaterial3D.BillboardModeEnum.Disabled
+        };
+
+        var axesInstance = new MeshInstance3D
+        {
+            Name = "BoxWallAxes",
+            Mesh = axesMesh,
+            MaterialOverride = axesMat
+        };
+        meshInstance.AddChild(axesInstance);
+
         return new BoxWallLoadResult
         {
             MeshInstance = meshInstance,
+            AxesContainer = axesInstance,
             Boxes = boxes.ToArray(),
             TotalCount = boxes.Count
         };

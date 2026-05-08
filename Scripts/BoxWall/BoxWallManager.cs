@@ -15,6 +15,7 @@ public partial class BoxWallManager : Node
     public delegate void BoxStateChangedEventHandler(int boxId, BoxState newState);
 
     private MultiMeshInstance3D? _meshInstance;
+    private Node3D? _axesContainer;
     private Dictionary<int, BoxInstance> _boxes = new();
     private Node3D? _worldRoot;
     private int _grabbedCount;
@@ -26,6 +27,20 @@ public partial class BoxWallManager : Node
     public override void _Ready()
     {
         Instance = this;
+    }
+
+    // [DEBUG] B 键切换箱子坐标系显示 — 调试完毕后删除此方法 + BoxWallLoader 中坐标系生成段
+    public override void _UnhandledInput(InputEvent @event)
+    {
+        if (@event is InputEventKey { Pressed: true, Keycode: Key.B })
+        {
+            if (_axesContainer != null)
+            {
+                _axesContainer.Visible = !_axesContainer.Visible;
+                Logger.Logger.Instance.Info("BoxWallManager",
+                    $"Box axes visible: {_axesContainer.Visible}");
+            }
+        }
     }
 
     public void SetWorldRoot(Node3D worldRoot)
@@ -45,6 +60,7 @@ public partial class BoxWallManager : Node
         }
 
         _meshInstance = result.MeshInstance;
+        _axesContainer = result.AxesContainer;
 
         _boxes.Clear();
         foreach (var box in result.Boxes)
