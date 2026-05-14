@@ -49,7 +49,7 @@ unique_name_in_owner = true
 script = ExtResource("3_axes")
 
 [node name="Camera3D" type="Camera3D" parent="HSplit/ViewportContainer/SubViewport/WorldRoot" unique_id=1186303679]
-transform = Transform3D(0.9265483, 0.022964988, -0.37547418, 6.7261413e-10, 0.99813485, 0.06104855, 0.37617582, -0.05656443, 0.9248201, -1.2230492, 0.62472177, 3.521562)
+transform = Transform3D(0.88555586, 0.20273368, -0.4179591, -0.46022835, 0.26069516, -0.8486623, -0.06309253, 0.9438945, 0.32416388, -1.0479493, -3.1265693, 2.1732488)
 fov = 50.0
 far = 200.0
 script = ExtResource("2_camera")

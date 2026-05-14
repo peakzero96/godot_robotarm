@@ -9,8 +9,8 @@ public static class CoordinateConverter
         return position;
     }
 
-    public static Vector3 ConvertRotation(Vector3 euler)
+    public static Quaternion ConvertRotation(Quaternion quat)
     {
-        return euler;
+        return quat;
     }
 }

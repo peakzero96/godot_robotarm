@@ -16,7 +16,7 @@ public class JointData
     public string ParentLink { get; set; } = "";
     public string ChildLink { get; set; } = "";
     public Vector3 OriginXyz { get; set; }
-    public Vector3 OriginRpy { get; set; }
+    public Quaternion OriginQuat { get; set; }
     public Vector3 Axis { get; set; } = Vector3.Up;
     public float Lower { get; set; }
     public float Upper { get; set; }
@@ -105,7 +105,7 @@ public static class UrdfParser
                 if (origin != null)
                 {
                     joint.OriginXyz = ParseVec3(origin.Attributes?["xyz"]?.Value);
-                    joint.OriginRpy = ParseVec3(origin.Attributes?["rpy"]?.Value);
+                    joint.OriginQuat = Quaternion.FromEuler(ParseVec3(origin.Attributes?["rpy"]?.Value));
                 }
 
                 var axis = jointNode.SelectSingleNode("axis");

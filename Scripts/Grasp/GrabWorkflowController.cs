@@ -10,8 +10,12 @@ public partial class GrabWorkflowController : Node
 {
     [Export] public int TargetBoxId { get; set; } = 0;
     [Export] public float HighlightDelaySec { get; set; } = 1.0f;
-    [Export] public float ApproachOffset { get; set; } = 0.3f;
     [Export] public float TcpOffset { get; set; } = 0.15f;
+    [Export] public float ApproachDistance { get; set; } = 0.3f;
+    [Export] public Vector3 LiftDirection { get; set; } = Vector3.Left;
+    [Export] public float LiftDistance { get; set; } = 0.3f;
+    [Export] public Vector3 PlacePosition { get; set; } = new(-1.0f, -1.0f, 0.0f);
+    [Export] public Vector3 PlaceRotationEulerDeg { get; set; } = new(0, 90, 0);
 
     public bool IsRunning { get; private set; }
 
@@ -71,48 +75,45 @@ public partial class GrabWorkflowController : Node
 
         var gripper = RobotController.Instance.Gripper;
         Basis eeBasis = gripper?.GlobalTransform.Basis ?? Basis.Identity;
-        var grabTransform = BoxAttachController.CalculateGrabTransform(box, eeBasis, out int normalAxis);
-        Vector3 grabPos = grabTransform.Origin;
-        Basis grabBasis = grabTransform.Basis;
+        var config = BuildConfig();
 
-        // 接近点：沿抓取面 -X 方向偏移
-        Vector3 approachPos = grabPos - grabBasis.X * ApproachOffset;
+        // 使用预计算的 GrabPath 或实时计算
+        var path = box.GrabPath ?? GrabPathCalculator.Compute(box, eeBasis, config);
+        if (box.GrabPath == null)
+        {
+            box.GrabPath = path;
+        }
 
-        // 提升点：抓取后沿 Y 方向抬高
-        Vector3 liftPos = grabPos + new Vector3(0, 0.3f, 0);
-
-        // 放置点（示例：搬运到另一个位置）
-        Vector3 placePos = grabPos + new Vector3(-1.0f, 0.3f, 0);
-
-        // 箱子旋转 Basis（用于日志）
-        var boxRotBasis = Basis.Identity
-            .Rotated(Vector3.Up, Mathf.DegToRad(box.RotationDeg.Y))
-            .Rotated(Vector3.Right, Mathf.DegToRad(box.RotationDeg.X))
-            .Rotated(Vector3.Forward, Mathf.DegToRad(box.RotationDeg.Z));
-
-        Logger.Logger.Instance.Info("GrabWorkflow", "=== Grab Waypoints ===");
-        LogPose("Box Center", box.Position, boxRotBasis);
-        LogPose("Approach", approachPos, grabBasis);
-        LogPose("Grab Surface", grabPos, grabBasis);
-        LogPose("Lift", liftPos, grabBasis);
-        LogPose("Place", placePos, grabBasis);
+        GrabPathCalculator.PrintPath(path);
 
         // 在场景中创建标记
-        CreatePoseMarker("Wp_Approach", approachPos, new Color(0, 1, 1));
-        CreatePoseMarker("Wp_Grab", grabPos, new Color(1, 1, 0));
-        CreatePoseMarker("Wp_Lift", liftPos, new Color(0, 1, 0));
-        CreatePoseMarker("Wp_Place", placePos, new Color(1, 0.5f, 0));
+        var wp = path.Waypoints;
+        CreatePoseMarker("Wp_BoxCenter", wp[0].Position, new Color(1, 1, 1));
+        CreatePoseMarker("Wp_Grab", wp[1].Position, new Color(1, 1, 0));
+        CreatePoseMarker("Wp_Approach", wp[2].Position, new Color(0, 1, 1));
+        CreatePoseMarker("Wp_Lift", wp[3].Position, new Color(0, 1, 0));
+        CreatePoseMarker("Wp_Place", wp[4].Position, new Color(1, 0.5f, 0));
 
         // 绘制路径连线
-        CreatePathLine(new[] { approachPos, grabPos, liftPos, placePos });
+        CreatePathLine(new[] { wp[2].Position, wp[1].Position, wp[3].Position, wp[4].Position });
     }
 
-    private void LogPose(string name, Vector3 pos, Basis basis)
+    private GrabPathConfig BuildConfig()
     {
-        var euler = basis.GetEuler();
-        Logger.Logger.Instance.Info("GrabWorkflow",
-            $"{name}: pos=({pos.X:F3}, {pos.Y:F3}, {pos.Z:F3}) " +
-            $"euler(deg)=({Mathf.RadToDeg(euler.X):F1}, {Mathf.RadToDeg(euler.Y):F1}, {Mathf.RadToDeg(euler.Z):F1})");
+        return new GrabPathConfig
+        {
+            TcpOffset = TcpOffset,
+            TcpRotationOffset = Basis.Identity.Rotated(Vector3.Up, Mathf.Pi / 2f),
+            ApproachDistance = ApproachDistance,
+            LiftDirection = LiftDirection,
+            LiftDistance = LiftDistance,
+            PlacePosition = PlacePosition,
+            PlaceRotation = Basis.Identity
+                .Rotated(Vector3.Up, Mathf.DegToRad(PlaceRotationEulerDeg.Y))
+                .Rotated(Vector3.Right, Mathf.DegToRad(PlaceRotationEulerDeg.X))
+                .Rotated(Vector3.Back, Mathf.DegToRad(PlaceRotationEulerDeg.Z))
+                .GetRotationQuaternion()
+        };
     }
 
     private void CreatePoseMarker(string name, Vector3 pos, Color color)
@@ -192,22 +193,24 @@ public partial class GrabWorkflowController : Node
         Vector3 eePos = eeTransform.Origin;
         Basis eeBasis = eeTransform.Basis;
 
-        // 虚拟夹爪：沿末端 -Z 平移 TcpOffset
+        // 虚拟夹爪：沿末端 +X 平移 TcpOffset，绕 Y 轴旋转 90°
         Vector3 tcpPos = eePos + eeBasis.X.Normalized() * TcpOffset;
+        Basis tcpBasis = eeBasis.Rotated(Vector3.Up, Mathf.Pi / 2f);
 
         // 日志输出位姿
         var eeEuler = eeBasis.GetEuler();
+        var tcpEuler = tcpBasis.GetEuler();
         Logger.Logger.Instance.Info("GrabWorkflow",
             $"End-Effector: pos=({eePos.X:F3}, {eePos.Y:F3}, {eePos.Z:F3}) " +
             $"euler(deg)=({Mathf.RadToDeg(eeEuler.X):F1}, {Mathf.RadToDeg(eeEuler.Y):F1}, {Mathf.RadToDeg(eeEuler.Z):F1})");
         Logger.Logger.Instance.Info("GrabWorkflow",
             $"Virtual Gripper: pos=({tcpPos.X:F3}, {tcpPos.Y:F3}, {tcpPos.Z:F3}) " +
-            $"euler(deg)=({Mathf.RadToDeg(eeEuler.X):F1}, {Mathf.RadToDeg(eeEuler.Y):F1}, {Mathf.RadToDeg(eeEuler.Z):F1})");
+            $"euler(deg)=({Mathf.RadToDeg(tcpEuler.X):F1}, {Mathf.RadToDeg(tcpEuler.Y):F1}, {Mathf.RadToDeg(tcpEuler.Z):F1})");
 
         // 末端坐标系（RGB = XYZ）
         CreateAxisMarker("Wp_EE_Axes", eeTransform, 0.4f);
         // 虚拟夹爪坐标系
-        CreateAxisMarker("Wp_TCP_Axes", new Transform3D(eeBasis, tcpPos), 0.3f);
+        CreateAxisMarker("Wp_TCP_Axes", new Transform3D(tcpBasis, tcpPos), 0.3f);
     }
 
     private void CreateAxisMarker(string name, Transform3D transform, float len)

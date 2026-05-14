@@ -9,18 +9,18 @@ public partial class JointPivot : Node3D
     public float LowerLimit { get; set; }
     public float UpperLimit { get; set; }
 
-    private Basis _baseRotation;
+    private Quaternion _baseQuat = Quaternion.Identity;
 
-    public void SetBaseRotation(Vector3 rpy)
+    public void SetBaseRotation(Quaternion quat)
     {
-        _baseRotation = Basis.FromEuler(rpy);
+        _baseQuat = quat;
     }
 
     public void SetAngle(float radians)
     {
         float clamped = Mathf.Clamp(radians, LowerLimit, UpperLimit);
-        Basis jointRotation = _baseRotation.Rotated(RotationAxis, clamped);
-        Basis = jointRotation;
+        var combined = _baseQuat * new Quaternion(RotationAxis, clamped);
+        Basis = new Basis(combined);
         _currentAngle = clamped;
     }
 

@@ -61,7 +61,7 @@ public partial class RobotController : Node
         {
             _worldRoot.AddChild(_robotRoot);
             _robotRoot.Position = new Vector3(0, 0, 0);
-            _robotRoot.Rotation = new Vector3(-1.57f, 0, 0);
+            // No root transform — use URDF coordinates as-is
         }
 
         EmitSignal(SignalName.RobotChanged, _robotName, _joints.Length);

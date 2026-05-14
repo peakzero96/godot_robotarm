@@ -35,7 +35,6 @@ public partial class BoxAttachController : Node
     public void HighlightBox(int boxId)
     {
         BoxWallManager.Instance.UpdateBoxState(boxId, BoxState.Targeted);
-        Logger.Logger.Instance.Info("BoxAttachController", $"Box {boxId} highlighted");
     }
 
     /// <summary>
@@ -50,6 +49,9 @@ public partial class BoxAttachController : Node
         // 箱子纯旋转 Basis（直接从四元数构建，避免 euler 重建误差）
         var boxRotBasis = new Basis(box.RotationQuat);
 
+        Logger.Logger.Instance.Info("CalculateGrabTransform", $"box.MessCenter: {box.MessCenter}");
+        Logger.Logger.Instance.Info("CalculateGrabTransform", $"boxRotBasis: {boxRotBasis}");
+
         Vector3 stdX = endEffectorBasis.X.Normalized();
         Vector3 stdY = endEffectorBasis.Y.Normalized();
 
@@ -57,6 +59,7 @@ public partial class BoxAttachController : Node
         float dotX = Mathf.Abs(boxRotBasis.X.Normalized().Dot(stdX));
         float dotY = Mathf.Abs(boxRotBasis.Y.Normalized().Dot(stdX));
         float dotZ = Mathf.Abs(boxRotBasis.Z.Normalized().Dot(stdX));
+        Logger.Logger.Instance.Info("CalculateGrabTransform", $"dotXYZ: {dotX},{dotY},{dotZ}");
 
         normalAxis = 0;
         float maxDot = dotX;
@@ -70,49 +73,57 @@ public partial class BoxAttachController : Node
             1 => boxRotBasis.Y,
             _ => boxRotBasis.Z
         };
+        Logger.Logger.Instance.Info("CalculateGrabTransform", $"normalAxisVec: {normalAxisVec}");
         Vector3 normalDir = normalAxisVec.Normalized();
+        Logger.Logger.Instance.Info("CalculateGrabTransform", $"normalDir: {normalDir}");
         float halfSize = normalAxis switch
         {
             0 => box.Size.X / 2f,
             1 => box.Size.Y / 2f,
             _ => box.Size.Z / 2f
         };
+        Logger.Logger.Instance.Info("CalculateGrabTransform", $"halfSize: {halfSize}");
 
         // 2. 两个候选面，选离原点近的
-        Vector3 posPlus = box.Position + normalDir * halfSize;
-        Vector3 posMinus = box.Position - normalDir * halfSize;
+        Vector3 posPlus = box.MessCenter + normalDir * halfSize;
+        Vector3 posMinus = box.MessCenter - normalDir * halfSize;
+
+        Logger.Logger.Instance.Info("CalculateGrabTransform", $"posPlus: {posPlus}");
+        Logger.Logger.Instance.Info("CalculateGrabTransform", $"posMinus: {posMinus}");
 
         Vector3 surfacePos;
-        int sign;
+        // int sign;
         if (posPlus.Length() < posMinus.Length())
         {
             surfacePos = posPlus;
-            sign = 1;
+            // sign = 1;
         }
         else
         {
             surfacePos = posMinus;
-            sign = -1;
+            // sign = -1;
         }
+        Logger.Logger.Instance.Info("CalculateGrabTransform", $"surfacePos: {surfacePos}");
+
 
         // 3. 构建抓取面坐标系
-        // X: 从表面指向箱子中心
-        Vector3 grabX = (-sign * normalDir).Normalized();
+        // // X: 从表面指向箱子中心
+        // Vector3 grabX = (-sign * normalDir).Normalized();
 
-        // Y: 从剩余两个局部轴中选与 end_effector Y 夹角最小的，正交化
-        int r0 = normalAxis == 0 ? 1 : 0;
-        int r1 = normalAxis == 2 ? 1 : 2;
-        Vector3 axisR0 = (r0 switch { 0 => boxRotBasis.X, 1 => boxRotBasis.Y, _ => boxRotBasis.Z }).Normalized();
-        Vector3 axisR1 = (r1 switch { 0 => boxRotBasis.X, 1 => boxRotBasis.Y, _ => boxRotBasis.Z }).Normalized();
+        // // Y: 从剩余两个局部轴中选与 end_effector Y 夹角最小的，正交化
+        // int r0 = normalAxis == 0 ? 1 : 0;
+        // int r1 = normalAxis == 2 ? 1 : 2;
+        // Vector3 axisR0 = (r0 switch { 0 => boxRotBasis.X, 1 => boxRotBasis.Y, _ => boxRotBasis.Z }).Normalized();
+        // Vector3 axisR1 = (r1 switch { 0 => boxRotBasis.X, 1 => boxRotBasis.Y, _ => boxRotBasis.Z }).Normalized();
 
-        Vector3 grabY = Mathf.Abs(axisR0.Dot(stdY)) >= Mathf.Abs(axisR1.Dot(stdY))
-            ? axisR0 : axisR1;
-        grabY = (grabY - grabX * grabY.Dot(grabX)).Normalized();
+        // Vector3 grabY = Mathf.Abs(axisR0.Dot(stdY)) >= Mathf.Abs(axisR1.Dot(stdY))
+        //     ? axisR0 : axisR1;
+        // grabY = (grabY - grabX * grabY.Dot(grabX)).Normalized();
 
-        // Z: 右手系
-        Vector3 grabZ = grabX.Cross(grabY).Normalized();
+        // // Z: 右手系
+        // Vector3 grabZ = grabX.Cross(grabY).Normalized();
 
-        var grabBasis = new Basis(grabX, grabY, grabZ);
+        var grabBasis = boxRotBasis;
         return new Transform3D(grabBasis, surfacePos);
     }
 
@@ -143,6 +154,7 @@ public partial class BoxAttachController : Node
         CreateStandaloneBox(box.Position, box.Size);
 
         // Reparent to gripper, preserving global transform (box stays in place)
+        if (_attachedBox == null) return;
         var globalTransform = _attachedBox.GlobalTransform;
         _attachedBox.GetParent()?.RemoveChild(_attachedBox);
         gripper.AddChild(_attachedBox);

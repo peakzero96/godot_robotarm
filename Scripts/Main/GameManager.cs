@@ -96,8 +96,8 @@ public partial class GameManager : Node
 
             // positions are in mm, convert to meters
             float x = float.Parse(f[0]) / 1000f;
-            float y = -float.Parse(f[1]) / 1000f;
-            float z = -float.Parse(f[2]) / 1000f;
+            float y = float.Parse(f[1]) / 1000f;
+            float z = float.Parse(f[2]) / 1000f;
 
             // quaternion (x, y, z, w)
             float qa = float.Parse(f[3]);
@@ -110,21 +110,12 @@ public partial class GameManager : Node
             float height = float.Parse(f[8]);
             float depth = 0.2f; // uniform depth
 
-            // 180° around X axis to match y=-y, z=-z
-            var frameQuat = Quaternion.FromEuler(new Vector3(Mathf.Pi, 0, 0));
-            var quat = (frameQuat * new Quaternion(qa, qb, qc, qd).Normalized()).Normalized();
-            var euler = quat.GetEuler();
+            var quat = new Quaternion(qa, qb, qc, qd).Normalized();
 
             boxes.Add(new
             {
                 id = i,
                 position = new { x, y, z },
-                rotation_deg = new
-                {
-                    x = Mathf.RadToDeg(euler.X),
-                    y = Mathf.RadToDeg(euler.Y),
-                    z = Mathf.RadToDeg(euler.Z)
-                },
                 rotation_quat = new { x = quat.X, y = quat.Y, z = quat.Z, w = quat.W },
                 size = new { x = width, y = height, z = depth },
                 color = "#C4A882"

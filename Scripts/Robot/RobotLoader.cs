@@ -80,7 +80,7 @@ public static class RobotLoader
                 UpperLimit = joint.Upper,
                 Position = CoordinateConverter.ConvertPosition(joint.OriginXyz)
             };
-            pivot.SetBaseRotation(CoordinateConverter.ConvertRotation(joint.OriginRpy));
+            pivot.SetBaseRotation(CoordinateConverter.ConvertRotation(joint.OriginQuat));
             parentNode.AddChild(pivot);
             joints.Add(pivot);
 

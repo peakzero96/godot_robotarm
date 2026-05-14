@@ -33,6 +33,7 @@ public static class BoxWallLoader
         string defaultColor = Grasp.Main.AppConfig.Instance.BoxDefaultColor;
         var boxes = new List<BoxInstance>();
 
+        // for (int i = 0; i < boxesArray.Count; i++)
         for (int i = 0; i < boxesArray.Count; i++)
         {
             var boxData = boxesArray[i].AsGodotDictionary();
@@ -46,8 +47,6 @@ public static class BoxWallLoader
 
             var pos = boxData.TryGetValue("position", out var pv)
                 ? pv.AsGodotDictionary() : null;
-            var rot = boxData.TryGetValue("rotation_deg", out var rv)
-                ? rv.AsGodotDictionary() : null;
             var quatData = boxData.TryGetValue("rotation_quat", out var qv)
                 ? qv.AsGodotDictionary() : null;
             var size = boxData.TryGetValue("size", out var sv)
@@ -63,18 +62,41 @@ public static class BoxWallLoader
                     GetNum(quatData, "z", 0), GetNum(quatData, "w", 1)).Normalized();
             }
 
+            var scale = new Vector3(
+                    GetNum(size, "z", 0.6f), GetNum(size, "y", 0.2f), GetNum(size, "x", 0.3f));
+            var basis = new Basis(rotationQuat).Scaled(scale);
+
+            Logger.Logger.Instance.Info("BoxWallLoader",
+                $"Loaded box {i}");
+            Logger.Logger.Instance.Info("BoxWallLoader",
+                $"Box {i} position: {pos}");
+            Logger.Logger.Instance.Info("BoxWallLoader",
+                $"Box {i} rotation: {quatData}");
+            Logger.Logger.Instance.Info("BoxWallLoader",
+                $"Box {i} size: {size}");
+            Logger.Logger.Instance.Info("BoxWallLoader",
+                $"Box {i} scale: {scale}");
+            Logger.Logger.Instance.Info("BoxWallLoader",
+                $"Box {i} basis: {basis}");
+            Vector3 _position = new Vector3(
+                    GetNum(pos, "x", 0), GetNum(pos, "y", 0), GetNum(pos, "z", 0));
+            Vector3 _messCenter = _position + basis.Z / 2f;
+
+            Logger.Logger.Instance.Info("BoxWallLoader",
+                $"Box {i} _messCenter: {_messCenter}");
+
+
             boxes.Add(new BoxInstance
             {
                 Id = boxData.TryGetValue("id", out var idv) ? (int)idv.AsDouble() : i,
-                Position = new Vector3(
-                    GetNum(pos, "x", 0), GetNum(pos, "y", 0), GetNum(pos, "z", 0)),
-                RotationDeg = new Vector3(
-                    GetNum(rot, "x", 0), GetNum(rot, "y", 0), GetNum(rot, "z", 0)),
+                // 此处Position为箱子表面识别中心点
+                Position = _position,
                 RotationQuat = rotationQuat,
                 Size = new Vector3(
                     GetNum(size, "x", 0.3f), GetNum(size, "y", 0.2f), GetNum(size, "z", 0.6f)),
                 Color = ParseColor(colorStr),
-                MultiMeshIndex = i
+                MultiMeshIndex = i,
+                MessCenter = _messCenter,//TODO： 此处硬编码箱子厚度z方向
             });
         }
 
@@ -95,13 +117,16 @@ public static class BoxWallLoader
         for (int i = 0; i < boxes.Count; i++)
         {
             var box = boxes[i];
-            var basis = Basis.Identity
-                .Scaled(box.Size)
-                .Rotated(Vector3.Up, Mathf.DegToRad(box.RotationDeg.Y))
-                .Rotated(Vector3.Right, Mathf.DegToRad(box.RotationDeg.X))
-                .Rotated(Vector3.Forward, Mathf.DegToRad(box.RotationDeg.Z));
-            var transform = new Transform3D(basis, box.Position);
 
+            // 四元数定义的局部轴含义: Z=向内(depth), X=宽(height), Y=高(width)
+            // Size 存储: (width, height, depth)，需要重排到 (depth, width, height) 对应 (X, Y, Z)
+            var scale = new Vector3(box.Size.Z, box.Size.Y, box.Size.X);
+            var basis = new Basis(box.RotationQuat).Scaled(scale);
+
+            // Position 是表面中心 (Size.x * Size.y 面的中心)，沿 +Z(向内) 偏移 depth/2 到达箱体质心
+            Vector3 center = box.MessCenter;         
+
+            var transform = new Transform3D(basis, center);
             multiMesh.SetInstanceTransform(i, transform);
             multiMesh.SetInstanceColor(i, box.Color);
         }
@@ -166,18 +191,13 @@ public static class BoxWallLoader
         for (int i = 0; i < boxes.Count; i++)
         {
             var t = multiMesh.GetInstanceTransform(i);
+            Logger.Logger.Instance.Info("CreateMultiMesh", $"box basis: {t}");
+            
             Vector3 o = t.Origin;
             // Basis contains box scale, normalize to get pure direction
             Vector3 bx = t.Basis.X.Normalized();
             Vector3 by = t.Basis.Y.Normalized();
             Vector3 bz = t.Basis.Z.Normalized();
-
-            Vector3 euler = t.Basis.GetEuler();
-            Logger.Logger.Instance.Info("BoxWallLoader",
-                $"Box {i} origin: {o}, euler(deg)=({Mathf.RadToDeg(euler.X):F1}, {Mathf.RadToDeg(euler.Y):F1}, {Mathf.RadToDeg(euler.Z):F1}), basis: X={bx}, Y={by}, Z={bz}");
-
-            
-
 
             // X axis - Red
             axesMesh.SurfaceSetColor(new Color(1, 0.2f, 0.2f));
