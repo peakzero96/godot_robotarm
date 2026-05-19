@@ -15,7 +15,12 @@ public partial class GrabWorkflowController : Node
     [Export] public Vector3 LiftDirection { get; set; } = Vector3.Left;
     [Export] public float LiftDistance { get; set; } = 0.3f;
     [Export] public Vector3 PlacePosition { get; set; } = new(-1.0f, -1.0f, 0.0f);
-    [Export] public Vector3 PlaceRotationEulerDeg { get; set; } = new(0, 90, 0);
+    [Export] public Vector3 PlaceRotationEulerDeg { get; set; } = new(0, 90, -90);
+    [Export] public float ApproachDuration { get; set; } = 2.0f;
+    [Export] public float GrabDuration { get; set; } = 1.5f;
+    [Export] public float LiftDuration { get; set; } = 1.5f;
+    [Export] public float PlaceDuration { get; set; } = 2.0f;
+    [Export] public float ReturnDuration { get; set; } = 2.0f;
 
     public bool IsRunning { get; private set; }
 
@@ -45,6 +50,10 @@ public partial class GrabWorkflowController : Node
                 PrintCurrentAngles();
             if (key.Keycode == Key.Key2)
                 ShowEndEffectorFrames();
+            if (key.Keycode == Key.Key4)
+                VerifyFk();
+            if (key.Keycode == Key.Key3 && !IsRunning)
+                StartWorkflow();
         }
     }
 
@@ -56,6 +65,32 @@ public partial class GrabWorkflowController : Node
             $"Current angles (deg): [{string.Join(", ", System.Array.ConvertAll(degs, d => $"{d:F1}"))}]");
         Logger.Logger.Instance.Info("GrabWorkflow",
             $"Current angles (rad): [{string.Join(", ", System.Array.ConvertAll(angles, a => $"{a:F4}"))}]");
+    }
+
+    private void VerifyFk()
+    {
+        var joints = RobotController.Instance.Joints;
+        var angles = RobotController.Instance.GetJointAngles();
+
+        // 数学 FK
+        var fkPose = ForwardKinematics.ComputeEePose(joints, angles);
+
+        // 场景树 FK (gripper GlobalTransform)
+        var gripper = RobotController.Instance.Gripper;
+        var scenePose = gripper?.GlobalTransform ?? Transform3D.Identity;
+
+        Logger.Logger.Instance.Info("FK_Verify",
+            $"Angles (deg): {string.Join(", ", System.Array.ConvertAll(angles, a => $"{Mathf.RadToDeg(a):F1}"))}");
+        Logger.Logger.Instance.Info("FK_Verify",
+            $"Math  FK pos: ({fkPose.Origin.X:F4}, {fkPose.Origin.Y:F4}, {fkPose.Origin.Z:F4})");
+        Logger.Logger.Instance.Info("FK_Verify",
+            $"Scene FK pos: ({scenePose.Origin.X:F4}, {scenePose.Origin.Y:F4}, {scenePose.Origin.Z:F4})");
+        Logger.Logger.Instance.Info("FK_Verify",
+            $"Pos diff: {(fkPose.Origin - scenePose.Origin).Length():F6}m");
+        Logger.Logger.Instance.Info("FK_Verify",
+            $"Math  FK basis X: {fkPose.Basis.X.Normalized()}");
+        Logger.Logger.Instance.Info("FK_Verify",
+            $"Scene FK basis X: {scenePose.Basis.X.Normalized()}");
     }
 
     /// <summary>
@@ -100,6 +135,8 @@ public partial class GrabWorkflowController : Node
 
     private GrabPathConfig BuildConfig()
     {
+        Logger.Logger.Instance.Info("GrabWorkflow", $"PlaceRotationEulerDeg: {PlaceRotationEulerDeg}");
+        Logger.Logger.Instance.Info("GrabWorkflow", $"Basis.Identity: {Basis.Identity}");
         return new GrabPathConfig
         {
             TcpOffset = TcpOffset,
@@ -261,6 +298,13 @@ public partial class GrabWorkflowController : Node
     {
         if (IsRunning) return;
 
+        var box = BoxWallManager.Instance.GetBox(TargetBoxId);
+        if (box == null)
+        {
+            Logger.Logger.Instance.Warn("GrabWorkflow", $"Box {TargetBoxId} not found");
+            return;
+        }
+
         IsRunning = true;
         EmitSignal(SignalName.WorkflowStarted);
         Logger.Logger.Instance.Info("GrabWorkflow",
@@ -268,50 +312,50 @@ public partial class GrabWorkflowController : Node
 
         try
         {
-            // === Define keyframes (angles in radians) ===
-            // TODO: Tune these by using Key 1 to print current angles at desired poses
-            var homeAngles = new float[] { 0, 0, 0, 0, 0, 0 };
+            // Get or compute grab path
+            var gripper = RobotController.Instance.Gripper;
+            Basis eeBasis = gripper?.GlobalTransform.Basis ?? Basis.Identity;
+            var config = BuildConfig();
+            var path = box.GrabPath ?? GrabPathCalculator.Compute(box, eeBasis, config);
+            if (box.GrabPath == null) box.GrabPath = path;
 
-            var approachKeyframes = new JointKeyframe[]
-            {
-                new() { Angles = homeAngles, DurationSec = 0.01f },
-                new() { Angles = new float[] { 0f, -0.3f, 0.8f, 0f, 0.5f, 0f }, DurationSec = 2.0f },
-                new() { Angles = new float[] { 0f, -0.5f, 1.0f, 0f, 0.6f, 0f }, DurationSec = 1.5f },
-            };
+            Logger.Logger.Instance.Info("GrabWorkflow",
+                $"Grab path for box {TargetBoxId}:\n" +
+                $"  BoxCenter:   pos={FmtV(path.BoxCenter.Position)}, basis=({FmtV(path.BoxCenter.Basis.X)},{FmtV(path.BoxCenter.Basis.Y)},{FmtV(path.BoxCenter.Basis.Z)})\n" +
+                $"  GrabSurface: pos={FmtV(path.GrabSurface.Position)}, basis=({FmtV(path.GrabSurface.Basis.X)},{FmtV(path.GrabSurface.Basis.Y)},{FmtV(path.GrabSurface.Basis.Z)})\n" +
+                $"  Approach:    pos={FmtV(path.Approach.Position)}, basis=({FmtV(path.Approach.Basis.X)},{FmtV(path.Approach.Basis.Y)},{FmtV(path.Approach.Basis.Z)})\n" +
+                $"  Lift:        pos={FmtV(path.Lift.Position)}, basis=({FmtV(path.Lift.Basis.X)},{FmtV(path.Lift.Basis.Y)},{FmtV(path.Lift.Basis.Z)})\n" +
+                $"  Place:       pos={FmtV(path.Place.Position)}, basis=({FmtV(path.Place.Basis.X)},{FmtV(path.Place.Basis.Y)},{FmtV(path.Place.Basis.Z)})"
+                );
 
-            var transportKeyframes = new JointKeyframe[]
-            {
-                new() { Angles = new float[] { 0f, -0.2f, 0.6f, 0f, 0.3f, 0f }, DurationSec = 2.0f },
-                new() { Angles = new float[] { 0.5f, -0.1f, 0.4f, 0f, 0.2f, 0f }, DurationSec = 1.5f },
-            };
-
-            var returnKeyframes = new JointKeyframe[]
-            {
-                new() { Angles = new float[] { 0f, -0.3f, 0.6f, 0f, 0.3f, 0f }, DurationSec = 1.5f },
-                new() { Angles = homeAngles, DurationSec = 2.0f },
-            };
+            // Build joint sequences via IK
+            var joints = RobotController.Instance.Joints;
+            var homeAngles = RobotController.Instance.GetJointAngles();
+            var (approachGrab, transport, returnHome) = CartesianSequenceBuilder.BuildSequence(
+                joints, path, homeAngles,
+                ApproachDuration, GrabDuration, LiftDuration, PlaceDuration, ReturnDuration);
 
             // Step 1: Highlight
             EmitStep("Highlighting target box");
             BoxAttachController.Instance.HighlightBox(TargetBoxId);
             await WaitTimer(HighlightDelaySec);
 
-            // Step 2: Move to box
+            // Step 2: Approach and move to grab surface
             EmitStep("Moving to box");
-            JointSequencePlayer.Instance.Play(approachKeyframes);
+            JointSequencePlayer.Instance.Play(approachGrab);
             await ToSignal(JointSequencePlayer.Instance,
                 JointSequencePlayer.SignalName.PlaybackFinished);
 
-            // Step 3: Grab
+            // Step 3: Grab (GrabBox 同步发射 BoxAttached，无需 await)
+            var task = ToSignal(BoxAttachController.Instance,
+                BoxAttachController.SignalName.BoxAttached);
             EmitStep("Grabbing box");
             BoxAttachController.Instance.GrabBox(TargetBoxId);
-            await ToSignal(BoxAttachController.Instance,
-                BoxAttachController.SignalName.BoxAttached);
+            await task;
 
-            // Step 4: Transport
+            // Step 4: Transport to place
             EmitStep("Transporting box");
-            await WaitTimer(0.5f);
-            JointSequencePlayer.Instance.Play(transportKeyframes);
+            JointSequencePlayer.Instance.Play(transport);
             await ToSignal(JointSequencePlayer.Instance,
                 JointSequencePlayer.SignalName.PlaybackFinished);
 
@@ -323,7 +367,7 @@ public partial class GrabWorkflowController : Node
 
             // Step 6: Return home
             EmitStep("Returning home");
-            JointSequencePlayer.Instance.Play(returnKeyframes);
+            JointSequencePlayer.Instance.Play(returnHome);
             await ToSignal(JointSequencePlayer.Instance,
                 JointSequencePlayer.SignalName.PlaybackFinished);
 
@@ -346,6 +390,8 @@ public partial class GrabWorkflowController : Node
         EmitSignal(SignalName.WorkflowStepChanged, step);
         Logger.Logger.Instance.Info("GrabWorkflow", $"Step: {step}");
     }
+
+    private static string FmtV(Vector3 v) => $"({v.X:F3},{v.Y:F3},{v.Z:F3})";
 
     private async Task WaitTimer(float durationSec)
     {

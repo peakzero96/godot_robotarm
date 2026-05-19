@@ -47,6 +47,16 @@ public partial class GameManager : Node
         // Load robot
         RobotController.Instance.LoadRobot();
 
+        // Apply initial joint angles from config
+        var initAngles = AppConfig.Instance.InitialJointAnglesDeg;
+        if (initAngles.Length > 0)
+        {
+            float[] radians = System.Array.ConvertAll(initAngles, Mathf.DegToRad);
+            RobotController.Instance.SetJointAngles(radians);
+            Logger.Logger.Instance.Info("GameManager",
+                $"Initial joint angles applied: [{string.Join(", ", System.Array.ConvertAll(initAngles, d => $"{d:F1}"))}] deg");
+        }
+
         // Load test box wall
         LoadTestBoxWall();
 

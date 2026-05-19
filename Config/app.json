@@ -8,7 +8,8 @@
   },
   "robot": {
     "default_path": "robot_arm/abb_irb4600_60_205",
-    "update_rate_hz": 60
+    "update_rate_hz": 60,
+    "initial_joint_angles_deg": [0, -20, 20, 0, 0, 0]
   },
   "scene": {
     "default_camera": "free_orbit",

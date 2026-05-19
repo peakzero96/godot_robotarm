@@ -15,6 +15,7 @@ public partial class AppConfig : Node
     // Robot
     public string RobotPath { get; private set; } = "robot_arm/abb_irb4600_60_205";
     public int UpdateRateHz { get; private set; } = 60;
+    public float[] InitialJointAnglesDeg { get; private set; } = System.Array.Empty<float>();
 
     // Scene
     public string DefaultCamera { get; private set; } = "free_orbit";
@@ -85,6 +86,16 @@ public partial class AppConfig : Node
                 {
                     if (rob.TryGetValue("default_path", out var v)) RobotPath = v.AsString();
                     if (rob.TryGetValue("update_rate_hz", out v)) UpdateRateHz = (int)v.AsDouble();
+                    if (rob.TryGetValue("initial_joint_angles_deg", out v))
+                    {
+                        var arr = v.AsGodotArray();
+                        if (arr != null)
+                        {
+                            InitialJointAnglesDeg = new float[arr.Count];
+                            for (int i = 0; i < arr.Count; i++)
+                                InitialJointAnglesDeg[i] = (float)arr[i].AsDouble();
+                        }
+                    }
                 }
             }
 

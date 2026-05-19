@@ -12,6 +12,8 @@ public static class GrabPathCalculator
 
         // Waypoint 0: BoxCenter
         Vector3 boxCenter = box.MessCenter;
+        
+
         var boxCenterWp = new WaypointPose
         {
             Kind = WaypointKind.BoxCenter,
@@ -46,8 +48,13 @@ public static class GrabPathCalculator
         var (approachWp, liftWp) = ComputeTransitWaypoints(grabWp, config);
 
         // Waypoint 4: Place (固定放置位姿)
+        Logger.Logger.Instance.Info("Compute", $"tcp basis: {new Basis(config.PlaceRotation)}");
+        Logger.Logger.Instance.Info("Compute", $"tcp pos: {config.PlacePosition}");
         Basis placeEeBasis = TcpToEeBasis(new Basis(config.PlaceRotation), config.TcpRotationOffset);
         Vector3 placeEePos = TcpToEePos(config.PlacePosition, placeEeBasis, config.TcpOffset);
+        Logger.Logger.Instance.Info("Compute", $"placeEeBasis: {placeEeBasis}");
+        Logger.Logger.Instance.Info("Compute", $"placeEePos: {placeEePos}");
+
         var placeWp = new WaypointPose
         {
             Kind = WaypointKind.Place,

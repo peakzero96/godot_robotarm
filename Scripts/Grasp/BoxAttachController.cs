@@ -12,6 +12,7 @@ public partial class BoxAttachController : Node
 
     [Export] public float AttachTransitionSec { get; set; } = 0.3f;
 
+    private Node3D? _attachedBoxRoot;
     private MeshInstance3D? _attachedBox;
     private StandardMaterial3D? _attachedBoxMaterial;
     private Node3D? _worldRoot;
@@ -49,8 +50,6 @@ public partial class BoxAttachController : Node
         // 箱子纯旋转 Basis（直接从四元数构建，避免 euler 重建误差）
         var boxRotBasis = new Basis(box.RotationQuat);
 
-        Logger.Logger.Instance.Info("CalculateGrabTransform", $"box.MessCenter: {box.MessCenter}");
-        Logger.Logger.Instance.Info("CalculateGrabTransform", $"boxRotBasis: {boxRotBasis}");
 
         Vector3 stdX = endEffectorBasis.X.Normalized();
         Vector3 stdY = endEffectorBasis.Y.Normalized();
@@ -59,7 +58,6 @@ public partial class BoxAttachController : Node
         float dotX = Mathf.Abs(boxRotBasis.X.Normalized().Dot(stdX));
         float dotY = Mathf.Abs(boxRotBasis.Y.Normalized().Dot(stdX));
         float dotZ = Mathf.Abs(boxRotBasis.Z.Normalized().Dot(stdX));
-        Logger.Logger.Instance.Info("CalculateGrabTransform", $"dotXYZ: {dotX},{dotY},{dotZ}");
 
         normalAxis = 0;
         float maxDot = dotX;
@@ -73,23 +71,18 @@ public partial class BoxAttachController : Node
             1 => boxRotBasis.Y,
             _ => boxRotBasis.Z
         };
-        Logger.Logger.Instance.Info("CalculateGrabTransform", $"normalAxisVec: {normalAxisVec}");
         Vector3 normalDir = normalAxisVec.Normalized();
-        Logger.Logger.Instance.Info("CalculateGrabTransform", $"normalDir: {normalDir}");
         float halfSize = normalAxis switch
         {
             0 => box.Size.X / 2f,
             1 => box.Size.Y / 2f,
             _ => box.Size.Z / 2f
         };
-        Logger.Logger.Instance.Info("CalculateGrabTransform", $"halfSize: {halfSize}");
 
         // 2. 两个候选面，选离原点近的
         Vector3 posPlus = box.MessCenter + normalDir * halfSize;
         Vector3 posMinus = box.MessCenter - normalDir * halfSize;
 
-        Logger.Logger.Instance.Info("CalculateGrabTransform", $"posPlus: {posPlus}");
-        Logger.Logger.Instance.Info("CalculateGrabTransform", $"posMinus: {posMinus}");
 
         Vector3 surfacePos;
         // int sign;
@@ -150,15 +143,15 @@ public partial class BoxAttachController : Node
         // Hide the wall copy
         BoxWallManager.Instance.UpdateBoxState(boxId, BoxState.Grabbed);
 
-        // Create standalone box at its center position
-        CreateStandaloneBox(box.Position, box.Size);
+        // Create standalone box with same transform as in the wall
+        CreateStandaloneBox(box);
 
-        // Reparent to gripper, preserving global transform (box stays in place)
-        if (_attachedBox == null) return;
-        var globalTransform = _attachedBox.GlobalTransform;
-        _attachedBox.GetParent()?.RemoveChild(_attachedBox);
-        gripper.AddChild(_attachedBox);
-        _attachedBox.GlobalTransform = globalTransform;
+        // Reparent root to gripper, preserving global transform (box stays in place)
+        if (_attachedBoxRoot == null) return;
+        var globalTransform = _attachedBoxRoot.GlobalTransform;
+        _attachedBoxRoot.GetParent()?.RemoveChild(_attachedBoxRoot);
+        gripper.AddChild(_attachedBoxRoot);
+        _attachedBoxRoot.GlobalTransform = globalTransform;
 
         EmitSignal(SignalName.BoxAttached, boxId);
         Logger.Logger.Instance.Info("BoxAttachController", $"Box {boxId} attached to gripper");
@@ -166,18 +159,18 @@ public partial class BoxAttachController : Node
 
     public async void ReleaseBox(int boxId)
     {
-        if (_attachedBox == null) return;
+        if (_attachedBoxRoot == null) return;
 
         var gripper = RobotController.Instance.Gripper;
         if (gripper == null) return;
 
-        Vector3 releasePos = _attachedBox.GlobalPosition;
+        var globalTransform = _attachedBoxRoot.GlobalTransform;
 
-        // Reparent to WorldRoot
-        _attachedBox.GetParent()?.RemoveChild(_attachedBox);
+        // Reparent root to WorldRoot
+        _attachedBoxRoot.GetParent()?.RemoveChild(_attachedBoxRoot);
         if (_worldRoot != null)
-            _worldRoot.AddChild(_attachedBox);
-        _attachedBox.GlobalPosition = releasePos;
+            _worldRoot.AddChild(_attachedBoxRoot);
+        _attachedBoxRoot.GlobalTransform = globalTransform;
 
         BoxWallManager.Instance.UpdateBoxState(boxId, BoxState.Released);
 
@@ -188,15 +181,15 @@ public partial class BoxAttachController : Node
         fadeTween.TweenProperty(_attachedBoxMaterial, "albedo_color:a", 0.0f, fadeDuration);
         await ToSignal(fadeTween, Tween.SignalName.Finished);
 
-        _attachedBox.QueueFree();
+        _attachedBoxRoot.QueueFree();
+        _attachedBoxRoot = null;
         _attachedBox = null;
         _attachedBoxMaterial = null;
 
         EmitSignal(SignalName.BoxReleased, boxId);
-        Logger.Logger.Instance.Info("BoxAttachController", $"Box {boxId} released and faded");
     }
 
-    private void CreateStandaloneBox(Vector3 position, Vector3 size)
+    private void CreateStandaloneBox(BoxInstance box)
     {
         _attachedBoxMaterial = new StandardMaterial3D
         {
@@ -204,18 +197,93 @@ public partial class BoxAttachController : Node
             Transparency = BaseMaterial3D.TransparencyEnum.Alpha
         };
 
+        // 与 BoxWallLoader.CreateMultiMesh 相同的变换逻辑
+        var scale = new Vector3(box.Size.Z, box.Size.Y, box.Size.X);
+        var basis = new Basis(box.RotationQuat).Scaled(scale);
+        var transform = new Transform3D(basis, box.MessCenter);
+
+        // 根容器：整体 reparent 时移动这个
+        _attachedBoxRoot = new Node3D { Name = "GrabbedBoxRoot" };
+        _attachedBoxRoot.Transform = transform;
+
+        // 箱体
         _attachedBox = new MeshInstance3D
         {
             Name = "GrabbedBox",
             Mesh = new BoxMesh(),
-            MaterialOverride = _attachedBoxMaterial,
-            Position = position,
-            Scale = size
+            MaterialOverride = _attachedBoxMaterial
         };
+        _attachedBoxRoot.AddChild(_attachedBox);
+
+        // 边框
+        var wireMesh = new ImmediateMesh();
+        wireMesh.SurfaceBegin(Mesh.PrimitiveType.Lines, null);
+        Vector3[] corners =
+        {
+            new(-0.5f, -0.5f, -0.5f), new(0.5f, -0.5f, -0.5f),
+            new(0.5f, 0.5f, -0.5f), new(-0.5f, 0.5f, -0.5f),
+            new(-0.5f, -0.5f, 0.5f), new(0.5f, -0.5f, 0.5f),
+            new(0.5f, 0.5f, 0.5f), new(-0.5f, 0.5f, 0.5f),
+        };
+        int[][] edges =
+        {
+            new[] { 0, 1 }, new[] { 1, 2 }, new[] { 2, 3 }, new[] { 3, 0 },
+            new[] { 4, 5 }, new[] { 5, 6 }, new[] { 6, 7 }, new[] { 7, 4 },
+            new[] { 0, 4 }, new[] { 1, 5 }, new[] { 2, 6 }, new[] { 3, 7 },
+        };
+        foreach (var edge in edges)
+        {
+            wireMesh.SurfaceAddVertex(corners[edge[0]]);
+            wireMesh.SurfaceAddVertex(corners[edge[1]]);
+        }
+        wireMesh.SurfaceEnd();
+        var wireMat = new StandardMaterial3D
+        {
+            ShadingMode = StandardMaterial3D.ShadingModeEnum.Unshaded,
+            AlbedoColor = new Color(0.3f, 0.3f, 0.3f),
+            VertexColorUseAsAlbedo = false
+        };
+        var wireInstance = new MeshInstance3D
+        {
+            Name = "GrabbedBoxWireframe",
+            Mesh = wireMesh,
+            MaterialOverride = wireMat
+        };
+        _attachedBoxRoot.AddChild(wireInstance);
+
+        // 坐标轴
+        float axisLen = 0.5f;
+        var axesMesh = new ImmediateMesh();
+        axesMesh.SurfaceBegin(Mesh.PrimitiveType.Lines);
+        Vector3 o = Vector3.Zero;
+        // X - Red
+        axesMesh.SurfaceSetColor(new Color(1, 0.2f, 0.2f));
+        axesMesh.SurfaceAddVertex(o);
+        axesMesh.SurfaceAddVertex(Vector3.Right * axisLen);
+        // Y - Green
+        axesMesh.SurfaceSetColor(new Color(0.2f, 1, 0.2f));
+        axesMesh.SurfaceAddVertex(o);
+        axesMesh.SurfaceAddVertex(Vector3.Up * axisLen);
+        // Z - Blue
+        axesMesh.SurfaceSetColor(new Color(0.2f, 0.2f, 1));
+        axesMesh.SurfaceAddVertex(o);
+        axesMesh.SurfaceAddVertex(Vector3.Back * axisLen);
+        axesMesh.SurfaceEnd();
+        var axesMat = new StandardMaterial3D
+        {
+            AlbedoColor = Colors.White,
+            ShadingMode = StandardMaterial3D.ShadingModeEnum.Unshaded,
+            VertexColorUseAsAlbedo = true
+        };
+        var axesInstance = new MeshInstance3D
+        {
+            Name = "GrabbedBoxAxes",
+            Mesh = axesMesh,
+            MaterialOverride = axesMat
+        };
+        _attachedBoxRoot.AddChild(axesInstance);
 
         if (_worldRoot != null)
-            _worldRoot.AddChild(_attachedBox);
+            _worldRoot.AddChild(_attachedBoxRoot);
     }
-
-    public MeshInstance3D? GetAttachedBox() => _attachedBox;
 }

@@ -1,6 +1,8 @@
 using Godot;
 using Grasp.Logger;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Grasp.BoxWall;
 
@@ -125,6 +127,13 @@ public partial class BoxWallManager : Node
             case BoxState.Released:
                 _meshInstance.Multimesh.SetInstanceTransform(box.MultiMeshIndex, hiddenTransform);
                 break;
+        }
+
+        // 抓取/释放后重绘边框和坐标轴，跳过已抓取的箱子
+        if (box.State == BoxState.Grabbed || box.State == BoxState.Released)
+        {
+            BoxWallLoader.RefreshOverlays(_meshInstance, System.Array.FindAll(
+                _boxes.Values.ToArray(), b => true));
         }
     }
 
